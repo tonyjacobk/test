@@ -5,9 +5,8 @@ import os
 app = Flask(__name__)
 
 # Create a directory to store downloaded files if it doesn't exist
-DOWNLOAD_DIR = "downloads"
-if not os.path.exists(DOWNLOAD_DIR):
-    os.makedirs(DOWNLOAD_DIR)
+DOWNLOAD_DIR = "/tmp"
+
 
 @app.route('/show')
 def show_content():
