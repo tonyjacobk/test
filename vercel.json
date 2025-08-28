@@ -1,8 +1,18 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "0 5 * * *"
-    }
-  ]
-}
+ "version": 2,
+ "builds": [
+ {
+ "src": "webby.py",
+ "use": "@vercel/python"
+ }
+ ],
+ "routes": [
+ {
+ "src": "/(.*)",
+ "dest": "myapp.py"
+ },
+
+ 
+ ]
+ 
+ }
