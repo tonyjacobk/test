@@ -3,7 +3,7 @@ import requests
 import os
 
 app = Flask(__name__)
-
+j=""
 # Create a directory to store downloaded files if it doesn't exist
 DOWNLOAD_DIR = "/tmp"
 
@@ -14,6 +14,8 @@ def show_content():
     file_path = os.path.join(DOWNLOAD_DIR, "research_content.html")
     app.logger.info("Here is the trick")
     print("Print Trick")
+    print(j)
+    print(k)
     try:
         # Download the webpage content
         response = requests.get(url, timeout=10)
@@ -39,5 +41,7 @@ def show_content():
 
 if __name__ == '__main__':
  print ("before trick")
+ j="Hello this is J"
+ K="Hello this is K"
  app.run(host='0.0.0.0',debug=True)
 
