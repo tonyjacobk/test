@@ -3,7 +3,7 @@ import requests
 import os
 
 app = Flask(__name__)
-j=""
+j="Thomas"
 # Create a directory to store downloaded files if it doesn't exist
 DOWNLOAD_DIR = "/tmp"
 
