@@ -10,6 +10,7 @@ DOWNLOAD_DIR = "/tmp"
 
 @app.route('/show')
 def show_content():
+    global j
     url = 'https://www.capitalmarket.com/research'
     file_path = os.path.join(DOWNLOAD_DIR, "research_content.html")
     app.logger.info("Here is the trick")
