@@ -12,7 +12,8 @@ DOWNLOAD_DIR = "/tmp"
 def show_content():
     url = 'https://www.capitalmarket.com/research'
     file_path = os.path.join(DOWNLOAD_DIR, "research_content.html")
-
+    app.logger.info("Here is the trick")
+    print("Print Trick")
     try:
         # Download the webpage content
         response = requests.get(url, timeout=10)
