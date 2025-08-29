@@ -14,8 +14,8 @@ def show_content():
     file_path = os.path.join(DOWNLOAD_DIR, "research_content.html")
     app.logger.info("Here is the trick")
     print("Print Trick")
-    print(j)
-    print(k)
+    print("This is J",j)
+
     try:
         # Download the webpage content
         response = requests.get(url, timeout=10)
