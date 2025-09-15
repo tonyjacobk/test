@@ -32,6 +32,8 @@ def generate_appropriate_ma_date_string():
         target_date = target_date - timedelta(days=2)  # Go back to Friday
     
     # Rule 2: If GMT time < 13:00, use yesterday's date
+    elif current_weekday == 0 and current_hour < 13:
+        target_date = target_date - timedelta(days=3)
     elif current_hour < 13:
         target_date = target_date - timedelta(days=1)
     
