@@ -1,6 +1,8 @@
 from flask import Flask,Blueprint
 import requests
 import os
+from download_bhav_copy import bhav_main
+bhav_main()
 bp=Blueprint("test",__name__)
 
 j="Thomas"
