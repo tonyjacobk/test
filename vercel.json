@@ -2,14 +2,14 @@
  "version": 2,
  "builds": [
  {
- "src": "bprint.py",
+ "src": "webby.py",
  "use": "@vercel/python"
  }
  ],
  "routes": [
  {
  "src": "/(.*)",
- "dest": "bprint.py"
+ "dest": "webby.py"
  }
 
  
