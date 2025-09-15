@@ -1,6 +1,7 @@
 from flask import Flask,Blueprint
 import requests
 import os
+import csv
 j="Thomas"
 # Create a directory to store downloaded files if it doesn't exist
 DOWNLOAD_DIR = "/tmp"
@@ -42,4 +43,14 @@ def show_content():
 def soman():
     print("Soman Shines")
     return("Soman shines")
+@webby_bp.route("/getfile")
+def load_price():
+    try:
+        with open('/tmp/price.csv', mode='r') as file:
+            reader = csv.reader(file)
+            rows = list(reader)  # Read all rows into a list
+            return rows
+    except FileNotFoundError:
+        print(f"Error: The file '{csv_file}' does not exist.")
+        return "Failed"
 
