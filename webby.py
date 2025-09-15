@@ -1,14 +1,14 @@
-from flask import Flask
+from flask import Flask,Blueprint
 import requests
 import os
+bp=Blueprint("test",__name__)
 
-app = Flask(__name__)
 j="Thomas"
 # Create a directory to store downloaded files if it doesn't exist
 DOWNLOAD_DIR = "/tmp"
 
 
-@app.route('/show')
+@bp.route('/show')
 def show_content():
     global j
     url = 'https://www.capitalmarket.com/research'
@@ -40,9 +40,7 @@ def show_content():
     except requests.exceptions.RequestException as e:
         return f"Error fetching URL: {str(e)}", 500
 
-if __name__ == '__main__':
- print ("before trick")
- j="Hello this is J"
- K="Hello this is K"
- app.run(host='0.0.0.0',debug=True)
-
+@bp.route("/")
+def soman():
+    print("Soman Shines")
+    return("Soman shines")
