@@ -1,4 +1,5 @@
 from flask import Flask,Blueprint
+from download_bhav_copy import bhav_main
 import requests
 import os
 import csv
@@ -6,7 +7,7 @@ j="Thomas"
 # Create a directory to store downloaded files if it doesn't exist
 DOWNLOAD_DIR = "/tmp"
 webby_bp=Blueprint("webby",__name__)
-
+bhav_main()
 @webby_bp.route('/show')
 def show_content():
     global j
