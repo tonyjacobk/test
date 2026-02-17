@@ -4,7 +4,9 @@ import os
 bhav_bp=Blueprint("bhav",__name__)
 UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'csv', 'jpg', 'jpeg', 'gif'}
-
+import collections
+import collections.abc
+collections.Sequence = collections.abc.Sequence
 
 def allowed_file(filename):
     return '.' in filename and \
