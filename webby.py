@@ -1,4 +1,4 @@
-from flask import Flask,Blueprint
+from flask import Flask,Blueprint,send_file
 #from download_bhav_copy import bhav_main
 import requests
 import os
@@ -57,22 +57,28 @@ def load_price():
 
 def read_the_file(path):
     finalpath="https://mega.co.nz/"+path
-    MegaMan.mega.download_url(finalpath,dest_filename="sample.pdf")
-
+    imega=Mega()
+    x=imega.login("tonyjacobk@gmail.com","Seemu@2002") 
+    if x :
+     print("Final Path ",finalpath)
+     imega.download_url(finalpath)
+    else:
+        print("login failed")
 @webby_bp.route("/mega")
 def view_pdf():
     pdf_path="#!vItHABhD!dyLt0GNIQMCBeSSA5Sc_sLw86i1D8O7gJMNh_pRlJpI"
     print("PDFpathi is",pdf_path)
     # Replace 'sample.pdf' with the path to your PDF file
     read_the_file(pdf_path)
+    print("Download success")
     return send_file(
         '/tmp/sample.pdf',
         mimetype='application/pdf',
         as_attachment=False  # Important: allows inline viewing
     )
-
+@webby_bp.route("/cmega")
 def load_file():
  imega=Mega()
- imega.login("tonyjacobk@gmail.com","Simansy@2022")
+ imega.login("tonyjacobk@gmail.com","Seemu@2002")
  imega.download_url("https://mega.co.nz/#!vItHABhD!dyLt0GNIQMCBeSSA5Sc_sLw86i1D8O7gJMNh_pRlJpI")
  return ("Downloaded")
