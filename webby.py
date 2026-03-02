@@ -54,7 +54,23 @@ def load_price():
     except FileNotFoundError:
         print(f"Error: The file '{csv_file}' does not exist.")
         return "Failed"
+
+def read_the_file(path):
+    finalpath="https://mega.co.nz/"+path
+    MegaMan.mega.download_url(finalpath,dest_filename="sample.pdf")
+
 @webby_bp.route("/mega")
+def view_pdf():
+    pdf_path="#!vItHABhD!dyLt0GNIQMCBeSSA5Sc_sLw86i1D8O7gJMNh_pRlJpI"
+    print("PDFpathi is",pdf_path)
+    # Replace 'sample.pdf' with the path to your PDF file
+    read_the_file(pdf_path)
+    return send_file(
+        '/tmp/sample.pdf',
+        mimetype='application/pdf',
+        as_attachment=False  # Important: allows inline viewing
+    )
+
 def load_file():
  imega=Mega()
  imega.login("tonyjacobk@gmail.com","Simansy@2022")
