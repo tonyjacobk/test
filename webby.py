@@ -3,6 +3,7 @@ from flask import Flask,Blueprint
 import requests
 import os
 import csv
+from mega import Mega
 j="Thomas"
 # Create a directory to store downloaded files if it doesn't exist
 DOWNLOAD_DIR = "/tmp"
@@ -53,4 +54,9 @@ def load_price():
     except FileNotFoundError:
         print(f"Error: The file '{csv_file}' does not exist.")
         return "Failed"
-
+@webby_bp.route("/mega")
+def load_file():
+ imega=Mega()
+ imega.login("tonyjacobk@gmail.com","Simansy@2022")
+ imega.download_url("https://mega.co.nz/#!vItHABhD!dyLt0GNIQMCBeSSA5Sc_sLw86i1D8O7gJMNh_pRlJpI")
+ return ("Downloaded")
