@@ -13,7 +13,7 @@ def connect():
   connect_timeout=timeout,
   cursorclass=pymysql.cursors.DictCursor,
   db="defaultdb",
-  password= os.environ.get('password')
+  password=os.environ.get('password'),
   host="mysql-debe0f5-tonyjacobk-250a.j.aivencloud.com",
   read_timeout=timeout,
   port=19398,
