@@ -46,6 +46,7 @@ class Mega:
             self.login_anonymous()
        # self._trash_folder_node_id = self.get_node_by_type(4)[0]
         logger.info('Login complete')
+        print("Login Completed")
         return self
 
     def _login_user(self, email, password):
@@ -466,8 +467,3 @@ class Mega:
         """
         file_handle, file_key = self._parse_url(url).split('!')
         return self.get_public_file_info(file_handle, file_key)
-"""
-imega=Mega()
-imega.login("tonyjacobk@gmail.com","Seemu@2022")
-imega.download_url("https://mega.co.nz/#!vItHABhD!dyLt0GNIQMCBeSSA5Sc_sLw86i1D8O7gJMNh_pRlJpI")
-"""

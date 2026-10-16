@@ -7,7 +7,10 @@ from mega import Mega
 j="Thomas"
 # Create a directory to store downloaded files if it doesn't exist
 DOWNLOAD_DIR = "/tmp"
+imega=Mega()
+imega.login("tonyjacobk@gmail.com","Seemu@2002")
 webby_bp=Blueprint("webby",__name__)
+
 @webby_bp.route('/show')
 def show_content():
     global j

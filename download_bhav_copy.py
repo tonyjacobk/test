@@ -4,6 +4,8 @@ import pytz
 import os
 import requests
 import shutil
+import csv
+import json
 headers = {
     'Upgrade-Insecure-Requests': '1',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
@@ -14,7 +16,7 @@ headers = {
 
 
 
-def generate_appropriate_ma_date_string():
+def generate_appropriate_date():
     
     # Get current UTC time
     utc_now = datetime.datetime.now(pytz.UTC)
@@ -24,7 +26,8 @@ def generate_appropriate_ma_date_string():
     
     # Start with current date
     target_date = utc_now.date()
-    
+    print("Current Dare",target_date)
+
     # Rule 1: If Saturday (5) or Sunday (6), use Friday's date
     if current_weekday == 5:  # Saturday
         target_date = target_date - timedelta(days=1)  # Go back to Friday
@@ -32,8 +35,6 @@ def generate_appropriate_ma_date_string():
         target_date = target_date - timedelta(days=2)  # Go back to Friday
     
     # Rule 2: If GMT time < 13:00, use yesterday's date
-    elif current_weekday == 0 and current_hour < 13:
-        target_date = target_date - timedelta(days=3)
     elif current_hour < 13:
         target_date = target_date - timedelta(days=1)
     
@@ -41,10 +42,15 @@ def generate_appropriate_ma_date_string():
     day = target_date.strftime("%d")
     month = target_date.strftime("%m") 
     year = target_date.strftime("%y")
-    
-    ma_string = f"MA{day}{month}{year}"
-    
-    return ma_string
+    return day,month,year
+
+def generate_appropriate_ma_date_string():
+   day,month,year=generate_appropriate_date()
+   return f"MA{day}{month}{year}"
+
+def generate_appropriate_bse_date_string():
+   day,month,year=generate_appropriate_date()
+   return f"20{year}{month}{day}"
 
 def generate_ma_string(target_date):
     
@@ -55,30 +61,36 @@ def generate_ma_string(target_date):
     
     return f"MA{day}{month}{year}"
 
+def generate_bse_string(target_date):
+    
+    # Format the date string: MA + DD + MM + YY
+    day = target_date.strftime("%d")
+    month = target_date.strftime("%m")
+    year = target_date.strftime("%y")
+    
+    return f"20{year}{month}{day}"
  
 def parse_ma_string(ma_string):
     
-    if not isinstance(ma_string, str) or len(ma_string) != 8 or not ma_string.startswith("MA"):
-        raise ValueError("MA string must be in format 'MADDMMYY'")
-    
-    try:
+    if ma_string.startswith("MA"): 
         day_str = ma_string[2:4]
         month_str = ma_string[4:6]
-        year_str = ma_string[6:8]
+        year_str = "20"+ma_string[6:8]
+    else:
+        day_str = ma_string[6:8]
+        month_str = ma_string[4:6]
+        year_str =ma_string[0:4]
+
+    try:
         
         day = int(day_str)
         month = int(month_str)
-        year = 2000 + int(year_str)  # Assuming 21st century
-        
+        year =  int(year_str)  # Assuming 21st century
         return date(year, month, day)
-    
     except (ValueError, TypeError) as e:
         raise ValueError(f"Invalid MA string format: {ma_string}") from e
-
-
-
-def generate_previous_day_ma_string(today_ma_string):
-
+        
+def generate_previous_day_date(today_ma_string):
     # Parse the input MA string to get the date
     today_date = parse_ma_string(today_ma_string)
     today_weekday = today_date.weekday()  # 0=Monday, 6=Sunday
@@ -90,14 +102,19 @@ def generate_previous_day_ma_string(today_ma_string):
     else:
         # Previous business day is yesterday
         previous_date = today_date - timedelta(days=1)
+    return previous_date
 
+def generate_previous_day_ma_string(today_ma_string):
+    previous_date=generate_previous_day_date(today_ma_string)
     return generate_ma_string(previous_date)
 
-
-
+def generate_previous_day_BSE_string(today_ma_string):
+     previous_date=generate_previous_day_date(today_ma_string)
+     return generate_bse_string(previous_date)
 
 def is_file_older_than_last_13gmt(filepath="/tmp/price.csv") -> bool:
     if not os.path.exists(filepath):
+      print("Could not find file in tmp.. To be downloaded")
       return True
 
     # Get current UTC time
@@ -112,11 +129,12 @@ def is_file_older_than_last_13gmt(filepath="/tmp/price.csv") -> bool:
 
     # Get file modification time
     file_mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(filepath))
-
+    print("Time from file ",file_mtime)
     # Return True if file is older than last 13:00 UTC
     return file_mtime < last_13
 
 def is_resource_found(url):
+    print("Trying URL ",url)
     try:
         response = requests.head(url,headers=headers)
         return response.ok
@@ -126,9 +144,7 @@ def is_resource_found(url):
 
 
 
-def download_and_backup(url, headers):
-    download_path = '/tmp/price.csv'
-    backup_path = '/tmp/price.bak'
+def download_and_backup(url, headers,download_path,backup_path):
 
     # Step 1: Backup existing file if it exists
     if os.path.exists(download_path):
@@ -172,19 +188,101 @@ def download_and_backup(url, headers):
 
 
 
-
-
-def bhav_main():
+def download_nse():
     if not is_file_older_than_last_13gmt():
+        print("Existing file is upto date")
         return ("No new file down loaded")
     c=generate_appropriate_ma_date_string()
     found=False
+    count=0
     while not found:
-       print(c)
+       if count > 7:
+           print("Could not download NSE")
+           return
+       count=count+1
+       print("Downloading NSE Bhav copy for ",c)
        url="https://nsearchives.nseindia.com/archives/equities/mkt/"+c+".csv"
        print(url)
        found=is_resource_found(url)
        if found:
-           download_and_backup(url,headers)
-           return(url)
+           download_and_backup(url,headers,'price.csv','price.bak')
+           break
        c=generate_previous_day_ma_string(c)
+def download_bse():
+   c=generate_appropriate_bse_date_string()
+   found=False
+   count=0
+   while not found:
+       if count > 7:
+           print("Downloading BSE Failed")
+           return
+       count=count+1
+       print("Downloading BSE Bhav copy for ",c)
+       url="https://www.bseindia.com/download/BhavCopy/Equity/BhavCopy_BSE_CM_0_0_0_"+c+"_F_0000.CSV"
+       print(url)
+       found=is_resource_found(url)
+       if found:
+           download_and_backup(url,headers,'bse.csv','bse.bak')
+           break
+       c=generate_previous_day_BSE_string(c)
+
+
+def build_dictprice(nfile, price_csv="price.csv", bse_csv="bse.csv"):
+    dictprice = {}
+
+    # --- Read price.csv ---
+    with open(price_csv, newline="", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        for i, row in enumerate(reader):
+         if len(row) >1:
+          dictprice["Bhavdate"]=row[1]
+          break
+    with open(price_csv, newline="", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if len(row) < 4:
+                continue
+            if row[2]!="EQ": 
+                continue
+            key = row[1].strip()     # 2nd element
+            value = row[3].strip()   # 7th element
+            dictprice[key] = value
+        print("Total stocks after NSE",len(dictprice))
+     # --- Read bse.csv ---
+    with open(bse_csv, newline="", encoding="utf-8") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if len(row) < 18:
+                continue
+            if row[8] not in ['A','B']:
+                continue
+            key = row[7].strip()     # 8th element
+            value = row[17].strip()  # 18th element
+
+            if key in dictprice:
+                # Key exists in both → decide based on nfile
+                if nfile.lower() == "bse":
+                    dictprice[key] = value
+                # else keep price.csv value
+            else:
+                dictprice[key] = value
+    print("Total stocks after BSE",len(dictprice))
+    with open('dictprice.json', "w", encoding="utf-8") as f:
+        json.dump(dictprice, f, indent=2)
+
+    return dictprice
+
+
+
+
+
+def bhav_main():
+    from datetime import datetime
+    now = datetime.now()
+    current_datetime_string = now.isoformat()
+    print("Downloading Bhav copy on ",current_datetime_string)
+    download_nse()
+    download_bse()
+    dictprice=build_dictprice("nse")
+    print(dictprice["Bhavdate"])
+bhav_main()

@@ -58,7 +58,6 @@ class MegaManager:
      except Exception as e:
             print(f"❌ Upload failed: {e}")
             return None
-
     def list_files(self):
         """List all files in your MEGA root directory."""
         try:
@@ -91,7 +90,7 @@ class MegaManager:
       return -1
 
     def delete_url(self,myurl):
-     name=self.get_file_Name_from_url(myurl)
+     name=self.get_file_Name_from_url(myurl.strip())
     
      if name:
         logger.info("Got fileName: %s from URL: %s",name,myurl)
@@ -100,14 +99,17 @@ class MegaManager:
      else:
           print("Could not find file Name from this URL ",myurl)
           logger.info("Could not get fileName for URL %s:",myurl)
-          return -1
+          return -2
 
 
     def get_file_Name_from_url(self,URL):
+     print(URL ,"is UrL")
      try:
       p= self.mega.get_public_url_info(URL)
+      print(p)
       return(p['name'])
      except Exception as E:
       print("Could not find file from this URL %s",URL)
+      print(E)
       return None
-MegaMan=MegaManager("tonyjacobk@gmail.com","Simansy@2022")
+MegaMan=MegaManager("tonyjacobk@gmail.com","Seemu@2002")
