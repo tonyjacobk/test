@@ -5,7 +5,8 @@ logger = logging.getLogger(__name__)
 from math import ceil
 from datetime import datetime, timedelta
 import os
-
+password=os.environ.get('password')
+print(password)
 timeout = 10
 def connect():
  connection = pymysql.connect(
@@ -20,6 +21,7 @@ def connect():
   user="avnadmin",
   write_timeout=timeout,
 )
+
  return connection
 
 def row_exists(broker,company,date):
