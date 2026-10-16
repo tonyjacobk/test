@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reports</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 6px;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-container {
+            margin-bottom: 10px;
+        }
+
+        form.inline {
+            display: inline;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header-container">
+    <a href="{{ url_for('report.index', page=1) }}">Main</a>
+</div>
+
+<h2>Report Table</h2>
+
+<!-- SEARCH -->
+<div class="search-container">
+    <form method="GET" action="{{ url_for('crud.index', page=1) }}" class="inline">
+        <label>Search by NSE Key:</label>
+        <input type="text" name="search_by_code" value="{{ search_by_code or '' }}">
+
+        <label>Search by Company:</label>
+        <input type="text" name="search_by_company" value="{{ search_by_company or '' }}">
+        <label>Search by Broker:</label>
+        <input type="text" name="search_by_broker" value="{{ search_by_broker or '' }}">
+
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- BULK DELETE BUTTON -->
+    <button type="submit" form="bulkForm"
+            onclick="return confirm('Delete selected rows?')">
+        Delete Selected
+    </button>
+</div>
+
+<!-- BULK FORM -->
+<form method="POST" action="{{ url_for('crud.multiple_delete') }}" id="bulkForm">
+
+    <!-- Preserve filters -->
+    {% for key, value in request.args.items() %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
+    {% endfor %}
+    <input type="hidden" name="page" value="{{ page }}">
+
+    <table>
+        <tr>
+            <th><input type="checkbox" onclick="toggleAll(this)"></th>
+            <th>Company</th>
+            <th>Code</th>
+            <th>Broker</th>
+            <th>URL</th>
+            <th>Recommendation</th>
+            <th>Target</th>
+            <th>Date</th>
+            <th>Site</th>
+            <th>Actions</th>
+        </tr>
+
+        {% for row in rows %}
+        <tr>
+            <!-- BULK SELECT + DATA -->
+            <td>
+                <input type="checkbox" name="selected_rows" value="{{ loop.index0 }}">
+
+                <!-- Data posted -->
+                <input type="hidden" name="rows[{{ loop.index0 }}][code]" value="{{ row.NSEKEY }}">
+                <input type="hidden" name="rows[{{ loop.index0 }}][broker]" value="{{ row.broker }}">
+                <input type="hidden" name="rows[{{ loop.index0 }}][site]" value="{{ row.site }}">
+                <input type="hidden" name="rows[{{ loop.index0 }}][date]" value="{{ row.report_date }}">
+                <input type="hidden" name="rows[{{ loop.index0 }}][url]" value="{{ row.URL }}">
+
+            </td>
+      <form method="POST" class="inline">
+
+                    {% for key, value in request.args.items() %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endfor %}
+                    <input type="hidden" name="page" value="{{ page }}">
+                    <input type="hidden" name="original_code" value="{{ row.NSEKEY }}">
+            <!-- DISPLAY -->
+    <td><input type="text" name="company" value="{{ row.company }}"></td>
+    <td><input type="text" name="code" value="{{ row.NSEKEY }}"></td>
+    <td><input type="text" name="broker" value="{{ row.broker }}"></td>
+    <td><input type="text" name="URL" value="{{ row.URL }}" size="15"></td> <!-- compact URL -->
+    <td><input type="text" name="recommendation" value="{{ row.recommendation }}"></td>
+    <td><input type="text" name="target" value="{{ row.target }}"></td>
+    <td><input type="date" name="report_date" value="{{ row.report_date }}"></td>
+    <td><input type="text" name="site" value="{{ row.site }}"></td>
+            <!-- ROW ACTIONS -->
+            <td>
+
+                    <button type="submit" formaction="{{ url_for('crud.save') }}">Save</button>
+                    <button type="submit" formaction="{{ url_for('crud.move') }}">Move</button>
+            </td>
+      </form>
+        </tr>
+        {% endfor %}
+    </table>
+</form>
+
+<!-- PAGINATION -->
+<div style="margin-top:10px;">
+    {% if page > 1 %}
+        <a href="{{ url_for('crud.index', page=page-1,
+            search_by_code=search_by_code,
+	    search_by_broker=search_by_broker,
+            search_by_company=search_by_company) }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ page }} of {{ total_pages }}</span>
+
+    {% if page < total_pages %}
+        <a href="{{ url_for('crud.index', page=page+1,
+            search_by_code=search_by_code,
+	    search_by_broker=search_by_broker,
+            search_by_company=search_by_company) }}">Next</a>
+    {% endif %}
+</div>
+
+<!-- JS -->
+<script>
+function toggleAll(source) {
+    let checkboxes = document.getElementsByName('selected_rows');
+    for (let i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = source.checked;
+    }
+}
+</script>
+
+</body>
+</html>

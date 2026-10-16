@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Company</title>
+</head>
+<body>
+    <h1>Edit Company</h1>
+    <form method="POST">
+        <label>Company:</label>
+        <input type="text" name="company" value="{{ company.company }}" required><br>
+        <label>Code:</label>
+        <input type="text" name="code" value="{{ company.code }}" required><br>
+        <button type="submit">Update</button>
+    </form>
+    <a href="{{ url_for('nse.index') }}">Back to List</a>
+</body>
+</html>
+

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recent Research Reports</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+
+    .header h2 {
+      margin: 0;
+      color: #333;
+    }
+
+    .search-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    #stockSearch {
+      padding: 8px 12px;
+      font-size: 14px;
+      width: 220px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    #searchButton {
+      padding: 8px 16px;
+      font-size: 14px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #searchButton:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header with Title and Search Box -->
+  <div class="header">
+    <h2>Recent Research Reports</h2>
+
+    <!-- Search Form -->
+    <div class="search-container">
+      <input
+        type="text"
+        id="stockSearch"
+        placeholder="Search stock..."
+        onkeypress="handleKeyPress(event)"
+      />
+      <button id="searchButton" onclick="submitSearch()">
+        Search
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content (example) -->
+  <div class="content">
+    <p>This is where your research reports would appear...</p>
+    <!-- You can loop through reports here using Jinja -->
+    <!-- {% for report in reports %} ... {% endfor %} -->
+  </div>
+
+  <!-- JavaScript to Handle Search -->
+  <script>
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        submitSearch();
+      }
+    }
+
+    function submitSearch() {
+      const input = document.getElementById('stockSearch');
+      const value = input.value.trim();
+
+      if (!value) return; // Ignore empty input
+
+      // Build URL: use Flask's url_for base + encode input
+      const baseUrl = "{{ url_for('search_stock', stock='') }}";
+      const finalUrl = baseUrl + encodeURIComponent(value);
+      window.location.href = finalUrl;
+    }
+  </script>
+
+</body>
+</html>

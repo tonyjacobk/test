@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reports</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 8px;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .icon-link {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header-container">
+    <a href="{{ url_for('report.index', page=1) }}">Main</a>
+
+    <button type="submit" form="bulk-delete-form">
+        Delete Selected
+    </button>
+</div>
+
+<h2>Report Table</h2>
+
+<!-- SEARCH -->
+<div class="search-container">
+    <form method="GET" action="{{ url_for('sector.index', page=1) }}">
+        <label>Search by Broker:</label>
+        <input type="text" name="search_by_broker" value="{{ search_by_broker or '' }}">
+
+        <label>Search by Company:</label>
+        <input type="text" name="search_by_company" value="{{ search_by_company or '' }}">
+
+        <button type="submit">Search</button>
+    </form>
+</div>
+
+<!-- BULK DELETE FORM -->
+<form id="bulk-delete-form"
+      method="POST"
+      action="{{ url_for('sector.delete_bulk') }}">
+
+<table>
+    <tr>
+        <th>Delete</th>
+        <th>Company</th>
+        <th>Broker</th>
+        <th>URL</th>
+        <th>Date</th>
+        <th>Site</th>
+        <th>Actions</th>
+    </tr>
+
+    {% for row in rows %}
+    <tr>
+        <td>
+            <input type="checkbox"
+                   name="delete_rows"
+                   value="{{ row.company }}||{{ row.broker }}||{{ row.report_date }}||{{ row.URL }}">
+        </td>
+
+        <td>{{ row.company }}</td>
+        <td>{{ row.broker }}</td>
+
+        <td>
+		<a href="{{ row.URL.replace('https://mega.co.nz/#!', request.url_root.rstrip('/') +'/show/') }}" target="_blank">
+                <img src="{{ url_for('static', filename='icon.png') }}"
+                     width="20"
+                     alt="Open">
+            </a>
+        </td>
+
+        <td>{{ row.report_date }}</td>
+        <td>{{ row.site }}</td>
+        <td>
+         <button type="button"
+            onclick="openMoveModal('{{ row.company }}',
+                                   '{{ row.broker }}',
+                                   '{{ row.report_date }}',
+	                           '{{ row.site }}',
+                                   '{{ row.URL }}')">
+         Move
+        </button>
+	<button type="button"
+            onclick="openEditModal('{{ row.company }}',
+                                   '{{ row.broker }}',
+                                   '{{ row.report_date }}',
+                                   '{{ row.site }}',
+                                   '{{ row.URL }}',
+				   '{{ row.id }}')">
+         Edit
+        </button>
+
+</td>
+
+    </tr>
+    {% endfor %}
+</table>
+</form>
+<!-- Modal (hidden by default) -->
+<!-- Modal (hidden by default) -->
+<div id="moveModal" style="display:none; position:fixed; top:20%; left:30%; 
+     background:#fff; border:1px solid #000; padding:20px; z-index:1000; width:400px;">
+    <h3>Move Report</h3>
+    <form id="moveForm" method="post" action="{{ url_for('sector.move') }}">
+        <div class="form-row">
+            <label for="modalCompany">Company Name:</label>
+            <input type="text" name="company" id="modalCompany">
+        </div>
+  
+	<div class="form-row">
+	<label for="modalnsekey">NSE Key:</label>	
+            <input type="text" name="nsekey" id="modalnsekey">
+        </div>
+
+        <div class="form-row">
+            <label for="modalBroker">Broker Name:</label>
+	    <select name="broker" id="modalBroker">
+	     {% for broker in brokers %} <option value="{{ broker }}">{{ broker }}</option> {% endfor %}
+	    </select>
+        </div>
+
+        <div class="form-row">
+            <label for="modalDate">Date:</label>
+            <input type="date" name="date" id="modalDate">
+        </div>
+
+        <div class="form-row">
+            <label for="modalURL">URL:</label>
+            <input type="text" name="URL" id="modalURL">
+        </div>
+
+        <div class="form-row">
+            <label for="modalRecommendation">Recommendation:</label>
+            <input type="text" name="recommendation" id="modalRecommendation">
+        </div>
+
+        <div class="form-row">
+            <label for="modalTarget">Target:</label>
+            <input type="text" name="target" id="modalTarget">
+        </div>
+         <div class="form-row">
+            <input type="hidden" name="site" id="modalsite">
+	    <input type="hidden" name="filename" id="fname">
+            <input type="hidden" name="olddate" id="olddate">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">Save</button>
+            <button type="button" onclick="closeModal()">Ignore</button>
+        </div>
+    </form>
+</div>
+
+<div id="editModal" style="display:none; position:fixed; top:20%; left:30%;
+     background:#fff; border:1px solid #000; padding:20px; z-index:1000; width:400px;">
+    <h3>Edit Report</h3>
+    <form id="editForm" method="post" action="{{ url_for('sector.edit') }}">
+        <div class="form-row">
+            <label for="editCompany">Company Name:</label>
+            <input type="text" name="company" id="editCompany">
+        </div>
+
+
+        <div class="form-row">
+            <label for="modalBroker">Broker Name:</label>
+            <select name="broker" id="editBroker">
+             {% for broker in brokers %} <option value="{{ broker }}">{{ broker }}</option> {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-row">
+            <label for="modalDate">Date:</label>
+            <input type="date" name="date" id="editDate">
+        </div>
+
+        <div class="form-row">
+            <label for="modalURL">URL:</label>
+            <input type="text" name="URL" id="editURL">
+        </div>
+
+
+         <div class="form-row">
+            <input type="hidden" name="site" id="editsite">
+	    <input type="hidden" name="eid" id="editid">
+            <input type="hidden" name="filename" id="fname">
+            <input type="hidden" name="olddate" id="olddate">
+        </div>
+
+
+   <div class="form-actions">
+            <button type="submit">Save</button>
+            <button type="button" onclick="closeEdit()">Ignore</button>
+        </div>
+    </form>
+</div>
+
+
+
+
+
+<style>
+    .form-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+    .form-row label {
+        width: 40%;
+        text-align: right;
+        margin-right: 10px;
+    }
+    .form-row input {
+        width: 55%;
+        padding: 5px;
+    }
+    .form-actions {
+        text-align: center;
+        margin-top: 15px;
+    }
+    .form-actions button {
+        margin: 0 10px;
+        padding: 6px 12px;
+    }
+</style>
+
+<script>
+function openMoveModal(company, broker, date, site,url) {
+    // Populate inputs with values
+    document.getElementById('modalCompany').value = company;
+    document.getElementById('modalBroker').value = broker;
+    document.getElementById('modalDate').value = date;
+    document.getElementById('modalURL').value = url;
+    document.getElementById('modalsite').value = site;
+    document.getElementById('fname').value = company;
+    document.getElementById('olddate').value = date;
+    // Show modal
+    document.getElementById('moveModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('moveModal').style.display = 'none';
+}
+
+function openEditModal(company, broker, date, site,url,id) {
+    // Populate inputs with values
+    document.getElementById('editCompany').value = company;
+    document.getElementById('editBroker').value = broker;
+    document.getElementById('editDate').value = date;
+    document.getElementById('editURL').value = url;
+    document.getElementById('editsite').value = site;
+    document.getElementById('editid').value = id;
+    document.getElementById('fname').value = company;
+    document.getElementById('olddate').value = date;
+    // Show modal
+    document.getElementById('editModal').style.display = 'block';
+}
+function closeEdit() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+
+
+</script>
+
+<!-- PAGINATION -->
+<div>
+    {% if page > 1 %}
+        {% if key and value %}
+            <a href="{{ url_for('sector.index', page=page-1, key=key, value=value) }}">Previous</a>
+        {% elif search_by_broker or search_by_company %}
+            <a href="{{ url_for('sector.index',
+                                page=page-1,
+                                search_by_broker=search_by_broker,
+                                search_by_company=search_by_company) }}">Previous</a>
+        {% else %}
+            <a href="{{ url_for('sector.index', page=page-1) }}">Previous</a>
+        {% endif %}
+    {% endif %}
+
+    <span>Page {{ page }} of {{ total_pages }}</span>
+
+    {% if page < total_pages %}
+        {% if key and value %}
+            <a href="{{ url_for('sector.index', page=page+1, key=key, value=value) }}">Next</a>
+        {% elif search_by_broker or search_by_company %}
+            <a href="{{ url_for('sector.index',
+                                page=page+1,
+                                search_by_broker=search_by_broker,
+                                search_by_company=search_by_company) }}">Next</a>
+        {% else %}
+            <a href="{{ url_for('sector.index', page=page+1) }}">Next</a>
+        {% endif %}
+    {% endif %}
+</div>
+
+</body>
+</html>
+

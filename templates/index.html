@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Top Section - Title */
+        .header {
+            background-color: #f5f5f5;
+            text-align: center;
+            padding: 20px;
+            font-size: 1.8em;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* Middle Section - Tabs + Table */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+        }
+
+.vertical-tabs {
+            /* Flexbox to handle layout and spacing */
+            display: flex;
+            flex-direction: column;
+            gap: 5px; /* Creates space between the buttons */
+            width: 150px; /* Sets a consistent width for the entire container */
+        }
+
+        .vertical-tabs button,
+        .vertical-tabs a {
+            /* Styles for both button and anchor tags */
+            display: block; /* Makes anchor tags behave like block-level elements */
+            flex: 1; /* Distributes width equally among all buttons */
+            padding: 10px 15px;
+            text-align: center;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+            border-radius: 5px;
+            font-family: sans-serif;
+            font-size: 16px;
+        }
+
+        .vertical-tabs button:hover,
+        .vertical-tabs a:hover {
+            background-color: #ddd;
+        }
+        .table-container {
+            flex: 1;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        /* Bottom Section - Pagination */
+        .footer {
+            background-color: #f5f5f5;
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .pagination a {
+            margin: 0 8px;
+            text-decoration: none;
+            color: #007BFF;
+        }
+
+        .pagination a:hover {
+            text-decoration: underline;
+        }
+
+        .pagination span {
+            margin: 0 8px;
+        }
+	.report-date {
+    font-size: 0.9em;
+    color: #555;
+    text-align: right;
+}
+      .buttlink {
+    /* Basic button styling */
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    text-decoration: none; /* Removes underline from the link */
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.buttlink:hover {
+    background-color: #0056b3;
+}
+    </style>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/my.css') }}">
+</head>
+<body>
+    <!-- Top Section -->
+    <div class="header">
+        Recent Research Reports
+	<div class="search-container">
+      <input
+        type="text"
+        id="stockSearch"
+        placeholder="Search stock/broker .."
+        onkeypress="handleKeyPress(event)"
+      />
+      <button id="searchButton" onclick="submitSearch()">
+        Search Company
+      </button>
+      <button id="searchbrokerButton" onclick="submitBrkSearch()">
+        Search Broker
+      </button>
+     <button id="addCompanyButton" onclick="openMoveModal()">
+  Add Company
+ </button>
+    </div>
+
+    </div>
+ <script>
+ history.replaceState(null, "", "/");
+ </script>
+  <script>
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        submitSearch();
+      }
+    }
+
+    function submitSearch() {
+      const input = document.getElementById('stockSearch');
+      const value = input.value.trim();
+
+      if (!value) return; // Ignore empty input
+
+      // Build URL: use Flask's url_for base + encode input
+      const baseUrl = "{{ url_for('report.search_stock_partial', stock='') }}";
+      const finalUrl = baseUrl + encodeURIComponent(value);
+      window.location.href = finalUrl;
+    }
+   function submitBrkSearch() {
+      const input = document.getElementById('stockSearch');
+      const value = input.value.trim();
+
+      if (!value) return; // Ignore empty input
+
+      // Build URL: use Flask's url_for base + encode input
+      const baseUrl = "{{ url_for('report.search_broker', brok='') }}";
+      const finalUrl = baseUrl + encodeURIComponent(value);
+      window.location.href = finalUrl;
+    }
+
+  </script>
+
+    <!-- Middle Section -->
+    <div class="content">
+        <!-- Vertical Tabs -->
+        <div class="vertical-tabs">
+	  <a href="{{ url_for('nse.index') }}" class="buttlink">NSE Codes</a>
+	  <a href="{{ url_for('crud.index') }}" class="buttlink">Admin company</a>
+	  <a href="{{ url_for('sector.index') }}" class="buttlink">Sector Reports</a>
+        </div>
+        <!-- Table -->
+        <div class="table-container">
+            <table>
+	    <tr>
+		    <th>Report Date</th>
+                    <th>Company</th>
+                    <th>Broker</th>
+                    <th>Recomm.</th>
+                    <th>Target</th>
+		    <th>Price</th>
+                    <th>URL</th>
+                </tr>
+                {% for row in data %}
+                <tr>
+		    <td>{{ row['report_date'] }}	
+                    <td>
+                      <a href="{{ url_for('report.search_stock',stock =row['company']|urlencode) }}">
+            {{ row['company'] }}
+		    </td>
+		    <td>
+		    <a href="{{ url_for('report.search_broker',brok =row['broker']|urlencode) }}">
+            {{ row['broker'] }}
+		    </a> </td> 
+                    <td>{{ row['recommendation'] }}</td>
+                    <td>{{ row['target'] }}</td>
+		    <td>{{ row['price'] }}</td>
+                    <td>
+                    <a href="{{ row.URL.replace('https://mega.co.nz/#!', request.url_root.rstrip('/') +'/show/') }}" target="_blank">
+		    <img src="{{ url_for('static', filename='icon.png') }}" alt="URL Icon" width="20">
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+<div id="moveModal" style="display:none; position:fixed; top:20%; left:30%; 
+     background:#fff; border:1px solid #000; padding:20px; z-index:1000; width:400px;">
+    <h3>Add Company</h3>
+    <form id="moveForm" method="post" action="{{ url_for('report.addcomp') }}">
+        <div class="form-row">
+            <label for="modalCompany">Company Name:</label>
+            <input type="text" name="company" id="modalCompany">
+        </div>
+  
+	<div class="form-row">
+	<label for="modalnsekey">NSE Key:</label>	
+            <input type="text" name="nsekey" id="modalnsekey">
+        </div>
+
+        <div class="form-row">
+            <label for="modalBroker">Broker Name:</label>
+	    <select name="broker" id="modalBroker">
+	     {% for broker in brokers %} <option value="{{ broker }}">{{ broker }}</option> {% endfor %}
+	    </select>
+        </div>
+
+        <div class="form-row">
+            <label for="modalDate">Date:</label>
+            <input type="date" name="date" id="modalDate">
+        </div>
+
+        <div class="form-row">
+            <label for="modalURL">URL:</label>
+            <input type="text" name="URL" id="modalURL">
+        </div>
+
+        <div class="form-row">
+            <label for="modalRecommendation">Recommendation:</label>
+            <input type="text" name="recommendation" id="modalRecommendation">
+        </div>
+
+        <div class="form-row">
+            <label for="modalTarget">Target:</label>
+            <input type="text" name="target" id="modalTarget">
+        </div>
+         <div class="form-row">
+            <input type="hidden" name="site" id="modalsite">
+	    <input type="hidden" name="filename" id="fname">
+            <input type="hidden" name="olddate" id="olddate">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">Save</button>
+            <button type="button" onclick="closeModal()">Ignore</button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+    .form-row label {
+        width: 40%;
+        text-align: right;
+        margin-right: 10px;
+    }
+    .form-row input {
+        width: 55%;
+        padding: 5px;
+    }
+    .form-actions {
+        text-align: center;
+        margin-top: 15px;
+    }
+    .form-actions button {
+        margin: 0 10px;
+        padding: 6px 12px;
+    }
+</style>
+
+<script>
+function openMoveModal(company, broker, date, site,url) {
+    // Populate inputs with values
+    document.getElementById('modalCompany').value = company;
+    document.getElementById('modalBroker').value = broker;
+    document.getElementById('modalDate').value = date;
+    document.getElementById('modalURL').value = url;
+    document.getElementById('modalsite').value = site;
+    document.getElementById('fname').value = company;
+    document.getElementById('olddate').value = date;
+    // Show modal
+    document.getElementById('moveModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('moveModal').style.display = 'none';
+}
+</script>
+
+    <!-- Bottom Section -->
+    <div class="footer">
+        <div class="pagination">
+    {% if broker is defined %}
+
+            {% if page > 1 %}
+               <a href="{{ url_for('report.search_broker',brok =broker|urlencode, page=page-1) }}">Previous</a>
+            {% endif %}
+            <span>Page {{ page }} of {{ total_pages }}</span>
+            {% if page < total_pages %}
+	  <a href="{{ url_for('report.search_broker', brok =broker|urlencode,page=page+1) }}">Next</a>
+            {% endif %}
+    {% elif company is defined %}
+
+            {% if page > 1 %}
+               <a href="{{ url_for('report.search_stock',stock =company|urlencode, page=page-1) }}">Previous</a>
+            {% endif %}
+            <span>Page {{ page }} of {{ total_pages }}</span>
+            {% if page < total_pages %}
+                <a href="{{ url_for('report.search_stock', stock =company|urlencode,page=page+1) }}">Next</a>
+            {% endif %}
+
+    {% else %}
+            {% if page > 1 %}
+                <a href="{{ url_for('report.index', page=page-1) }}">Previous</a>
+            {% endif %}
+            <span>Page {{ page }} of {{ total_pages }}</span>
+            {% if page < total_pages %}
+                <a href="{{ url_for('report.index', page=page+1) }}">Next</a>
+            {% endif %}
+      {% endif %}	    
+        </div>
+	 <div class="report-date">
+        {{ report_date }}
+    </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reports</title>
+    <style>
+        table, th, td { border: 1px solid black; border-collapse: collapse; padding: 8px; }
+        .icon-link { text-decoration: none; }
+        form { display: inline; }
+    </style>
+</head>
+<body>
+    <h2>Report Table</h2>
+    <table>
+        <tr>
+            <th>Company</th><th>Broker</th><th>URL</th><th>Recommendation</th><th>Target</th>
+            <th>Date</th><th>Site</th><th>Actions</th>
+        </tr>
+        {% for row in rows %}
+        <tr>
+            <td><a href="{{ url_for('index', key='company', value=row.company) }}">{{ row.company }}</a></td>
+            <td><a href="{{ url_for('index', key='broker', value=row.broker) }}">{{ row.broker }}</a></td>
+            <td><a href="{{ row.URL }}" class="icon-link" target="_blank">🔗</a></td>
+            <td>{{ row.recommendation }}</td>
+            <td>{{ row.target }}</td>
+            <td>{{ row.report_date }}</td>
+            <td>{{ row.site }}</td>
+            <td>
+                <form method="post" action="{{ url_for('delete') }}">
+                    <input type="hidden" name="company" value="{{ row.company }}">
+                    <input type="hidden" name="broker" value="{{ row.broker }}">
+                    <input type="hidden" name="report_date" value="{{ row.report_date }}">
+                    <button type="submit">Delete</button>
+                </form>
+                <form method="post" action="{{ url_for('save') }}">
+                    {% for field in ['company', 'broker', 'URL', 'recommendation', 'target', 'report_date', 'site'] %}
+                        <input type="hidden" name="{{ field }}" value="{{ row[field] }}">
+                    {% endfor %}
+                    <button type="submit">Save</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+

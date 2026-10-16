@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reports</title>
+    <style>
+        table, th, td { border: 1px solid black; border-collapse: collapse; padding: 8px; }
+        .icon-link { text-decoration: none; }
+        form { display: inline; }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <a href="{{ url_for('report.index', page=1) }}">Main</a>
+    </div>
+
+    <h2>Report Table</h2>
+    <table>
+        <tr>
+            <th>Company</th><th>Code</th><th>Broker</th><th>URL</th><th>Recommendation</th><th>Target</th>
+            <th>Date</th><th>Site</th><th>Actions</th>
+        </tr>
+        {% for row in rows %}
+        <tr>
+            <form method="post">
+                <td><input type="text" name="company" value="{{ row.company }}" size="15"></td>
+                <td><input type="text" name="code" value="{{ row.NSEKEY }}" size="10"></td>
+                <td><input type="text" name="broker" value="{{ row.broker }}" size="10"></td>
+                <td><input type="text" name="URL" value="{{ row.URL }}" size="15"></td>
+                <td><input type="text" name="recommendation" value="{{ row.recommendation }}" size="10"></td>
+                <td><input type="text" name="target" value="{{ row.target }}" size="10"></td>
+                <td><input type="text" name="report_date" value="{{ row.report_date }}" size="10"></td>
+                <td><input type="text" name="site" value="{{ row.site }}" size="10"></td>
+                <input type="hidden" name="original_code" value="{{ row.NSEKEY }}">
+                <td>
+                    <button type="submit" formaction="{{ url_for('crud.save') }}">Save</button>
+                    <button type="submit" formaction="{{ url_for('crud.delete') }}">Delete</button>
+                </td>
+            </form>
+        </tr>
+        {% endfor %}
+    </table>
+    <div>
+        {% if page > 1 %}
+            {% if key and value %}
+                <a href="{{ url_for('crud.index', page=page-1, key=key, value=value) }}">Previous</a>
+            {% else %}
+                <a href="{{ url_for('crud.index', page=page-1) }}">Previous</a>
+            {% endif %}
+        {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+            {% if key and value %}
+                <a href="{{ url_for('crud.index', page=page+1, key=key, value=value) }}">Next</a>
+            {% else %}
+                <a href="{{ url_for('crud.index', page=page+1) }}">Next</a>
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>

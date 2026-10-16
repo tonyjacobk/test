@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Companies</title>
+    <style>
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-family: sans-serif;
+            border-bottom: 1px solid #ccc;
+        }
+        .header-container h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header-container a {
+            text-decoration: none;
+            color: black;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <h1>Companies</h1>
+        <a href="{{ url_for('report.index', page=1) }}">Main</a>
+    </div>	
+    <a href="{{ url_for('nse.add') }}">Add New Company</a>
+    <table border="1">
+        <tr>
+            <th>Company</th>
+            <th>Code</th>
+            <th>Actions</th>
+        </tr>
+        {% for company in codes %}
+        <tr>
+            <td>{{ company.company }}</td>
+            <td>{{ company.code }}</td>
+            <td>
+                <a href="{{ url_for('nse.edit', code=company.code) }}">Edit</a>
+                <a href="{{ url_for('nse.delete', code=company.code) }}">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+
