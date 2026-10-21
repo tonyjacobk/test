@@ -1,0 +1,266 @@
+import requests
+from typing import Tuple,List,Dict,Optional
+from .nse_utils import nse
+import re
+import logging
+logger = logging.getLogger(__name__)
+
+def choose_only_equity_instruments(datalist):
+      filtered_list = []
+      for entry in datalist:
+        # Check if it's an equity entry
+        if entry.get('segment') == 'in equity':
+    #        symbol_info = entry.get('symbol_info', '').lower()
+            # Exclude if it's a Mutual Fund or ETF
+     #       if 'mutual fund' not in symbol_info and 'etf' not in symbol_info:
+               filtered_list.append(entry)
+      return filtered_list
+
+   
+def remove_PP_and_RE(data):
+    # Create a set of all symbols for quick lookup
+     all_symbols = {item['symbol'] for item in data}
+    
+    # Identify symbols that should be removed
+     symbols_to_remove = set()
+    
+    # Step 1 & 2: Find all symbols ending in -RE or PP and determine their base symbols
+     for item in data:
+        symbol = item['symbol']
+        base_symbol = None
+        
+        if symbol.endswith('-RE'):
+            base_symbol = symbol.replace('-RE', '')
+        elif symbol.endswith('PP'):
+            base_symbol = symbol.replace('PP', '')
+            
+        # Step 3: If a base symbol exists in the original list, add the full symbol to the removal set
+        if base_symbol and base_symbol in all_symbols:
+            symbols_to_remove.add(symbol)
+            
+    # Step 4: Build a new list containing only the items that are not in the removal set
+     filtered_data = [item for item in data if item['symbol'] not in symbols_to_remove]
+    
+     return filtered_data
+def remove_inactive_symbols(symbol_data):
+      return [item for item in symbol_data if item['activeSeries']]
+    
+
+
+def extended_tests(symbols: List[Dict]) -> Optional[Dict]:
+      if not symbols:
+        return None
+      """
+      symbols=choose_only_equity_instruments(symbols)
+      print ("After Equity",symbols)
+      if not symbols:
+        return None
+      if len(symbols) == 1:
+        return symbols
+      symbols=remove_inactive_symbols(symbols)
+      print ("removed Inactive",symbols)
+      if not symbols:
+        return None
+      if len(symbols) == 1:
+        return symbols """
+      symbols=remove_PP_and_RE(symbols)
+      print ("PP RE Removed",symbols)
+      if not symbols:
+        return None
+      return symbols               
+ 
+
+
+def process_list(clist,company):
+    if not clist:
+           return -1,None
+    if len(clist)==1 :
+      ret,val=is_this_same_company(company,clist[0]['companyName'],clist[0]['symbol'])
+      if ret:
+          return 0,clist
+      return -1,None
+    new_list=[]
+    for item in clist:
+        ret,val=is_this_same_company(company,item['companyName'],item['symbol'])
+        print ( ret,val,company,item['companyName'],"same comp")
+        if ret:
+            new_list.append(item)
+    print (new_list,"Search over")        
+    if not new_list:
+        return -1,None
+    if len(new_list) ==1:
+        return 0,new_list
+
+    return 1,new_list
+
+##Only True False is being used 
+     
+def is_this_same_company(from_report,from_nse,symbol_from_nse):
+      if from_report.lower()== symbol_from_nse.lower():
+        return True,"" 
+      print ("In is_this_same_company")
+      report_cleaned = re.sub(r'[^a-zA-Z0-9\s]', '', from_report).lower()
+      nse_cleaned = re.sub(r'[^a-zA-Z0-9\s]', '', from_nse).lower()
+    # 2. Split the cleaned strings into lists based on spaces
+      report_list = report_cleaned.split()
+      nse_list = nse_cleaned.split()
+
+    # 3. Remove 'the' from both lists
+      report_list = [word for word in report_list if word != 'the']
+      nse_list = [word for word in nse_list if word != 'the']
+      print ("Report list",report_list)
+      print("nse_list",nse_list)
+      if len(report_list) > len(nse_list):
+        return False ,""
+      results = []
+      all_match = True
+      for i in range(len(report_list)):
+        is_substring = report_list[i] in  nse_list[i]
+        results.append((report_list[i], nse_list[i], is_substring))
+        if not is_substring:
+            all_match = False
+
+      return all_match, results
+
+def find_best_match(nse_list):
+      smallest=[]
+      small_len=100 ## A big number ##
+      for item in nse_list:
+        nse_name=item['companyName']
+        cleaned=re.sub(r'[^a-zA-Z0-9\s]', '', nse_name).lower()
+        cleaned_list=cleaned.split()
+        clist=[word for word in cleaned_list if word != 'the']
+        print ("find_best_match",len(clist),clist,small_len)
+        if len(clist) == small_len:
+            smallest.append(item)
+        if len(clist) < small_len:
+            smallest=[item]
+            small_len=len(clist)
+      return  smallest
+
+def ask_for_help(text,best):
+        logger.error("NSE:Multiple options for %s %s",text ,best)
+        print ("Confusion ",text ,best)
+
+def expand_short_forms(raw_name: str) -> str:
+    print(raw_name)
+    replacements = {
+        'corpn': 'Corporation',
+        'ltd': 'Limited',
+        'amc': 'Asset Management Company',
+        'sez': 'Special Economic Zone',
+        'inds': 'Industries',
+        'hind.': 'Hindustan ',
+        'gsk':'GlaxoSmithKline',
+        'intl.':'international',
+        'natl.':'National',
+        'engg.':'Engineering'
+    }
+
+    pattern = r'(?i)\b(corpn|ltd|amc|sez|inds|gsk)\b|hind\.|engg\.|intl\.|natl\.'
+    return re.sub(
+        pattern,
+        lambda m: replacements.get(m.group().lower(), m.group()),
+        raw_name,
+        flags=re.IGNORECASE
+    )
+
+
+
+
+
+
+def preprocess_text(raw_name):
+  raw_name=expand_short_forms(raw_name)
+    # Remove leading 'the ' (case-insensitive) and replace with space
+  raw_name = re.sub(r'^the\s+', ' ', raw_name, flags=re.IGNORECASE)
+    # Remove all other occurrences of 'the ' and replace with space
+  raw_name = re.sub(r'\sthe\s+', ' ', raw_name, flags=re.IGNORECASE)
+  raw_name = raw_name.replace("."," ") 
+  raw_name=re.sub(r'[^a-zA-Z0-9 ]', '', raw_name)
+  raw_name=re.sub(r'\s+', ' ', raw_name).strip() ## multi space removal
+  return(raw_name)
+
+def remove_unwanted_keys(original_list):
+ new_list = [
+    {key: value for key, value in d.items() if key in {"symbol", "companyName","series"}}
+    for d in original_list
+    if all(d.get(k) is not None for k in {"symbol", "companyName", "series"})
+]
+ return new_list
+
+def preprocess_list(comp_list):
+    for i in comp_list:
+         i["companyName"]=preprocess_text(i["companyName"])
+    return (comp_list)
+
+def initials_check(complist,text):
+ parts=text.split()
+ first=parts[0]+parts[1]
+ newName=" ".join([first] + parts[2:])
+ ret,val=process_list(complist,newName)
+ return ret,val       
+
+def check_company_with_the_key(key):
+   complist=nse.get_companies(key)
+   if len(complist)==0:
+         return -1,[]
+   complist=extended_tests(complist)  ## Remove non equity instruments
+   print("After extended tests",complist)
+   if  not complist:
+      return -1,[]
+   complist=remove_unwanted_keys(complist) ##Removing all info other than company code and Name
+   print ("After remove_unwanted keys",complist)
+   if len(complist) >1 :
+       return 1,complist
+   return 0,complist
+
+def new_search(text: str):
+       initial=False
+       text=preprocess_text(text)
+       if len(text) < 2: # Single letter as name
+           return -1,[]
+       print ("Preprocessed Input:", text)
+       start_word = text.split()[0]
+       if len(start_word) < 2:
+           start_word= start_word+text.split()[1]
+           initial =True
+       complist=nse.get_companies(start_word)
+       print ("from NSE",complist)
+       if len(complist)==0:
+         return -1,[]
+       complist=extended_tests(complist)  ## Remove non equity instruments 
+       print("After extended tests",complist)
+       if  not complist:
+         return -1,[]
+       complist=remove_unwanted_keys(complist) ##Removing all info other than company code and Name
+       print ("After remove_unwanted keys",complist)
+       complist=preprocess_list(complist) #Removes the. Replaces non alpha , . with space and multi space with single space
+       print("After pre processing",complist)
+       ret,val=process_list(complist,text) ## Checks all company Names found from NSE and sees if only one matches the Name from textn
+       print("After process_list",ret,val)       
+       if ret == -1:
+         if not initial: 
+            return -1,[]
+         ret,val=initials_check(complist,text)
+         print(ret,val,"After initials_check")
+         if ret == -1:
+            return -1,[]
+         if ret ==0:
+            return 0,val
+       if ret==0:
+           return 0,val
+       best=find_best_match(val) 
+       print("best len is",len(best))
+       print(best)
+       if len(best) ==1:
+           return 0,best
+       blen=len(best)-1
+       for i in range (len(best)):
+           print(best[blen-i],"Best[i]",i)
+           if best[blen-i]['series']!="EQ":
+             best.pop(blen-i)
+       if len(best) ==1:
+           return 0,best
+       ask_for_help(text,best)
+       return 1,best
