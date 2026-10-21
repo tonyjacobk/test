@@ -5,8 +5,11 @@ logger = logging.getLogger(__name__)
 from math import ceil
 from datetime import datetime, timedelta
 import os
-password=os.environ.get('password')
-print(password)
+from dotenv import load_dotenv
+
+load_dotenv()
+password=os.getenv('password')
+print("Password:",password)
 timeout = 10
 def connect():
  connection = pymysql.connect(
