@@ -23,9 +23,9 @@ def delete_mega_file(link):
  print("Deleting link ",link)
  res.set_a_value(link)
 
-def save_data(pdftext,Sneeded=True):
+def save_data(flist,Sneeded=True):  ##flist is list of rowc changed by UI
     print("Sneeded is ",Sneeded)
-    for i in pdftext:
+    for i in flist:
        sb_up_st=time.perf_counter()
        sb.upsert_report(i["id"],i["date"],i['company'],i["recommendation"],i["target_price"],i["link"],i['broker'],i['delete'],i['sector'])
        sb_up_so=time.perf_counter()
@@ -54,6 +54,8 @@ def is_a_good_row(row,rtype):
 
 def update_db():
     global rows_for_logical_delete
+    global entries 
+    entries =sb.get_active_recommendations()
     sb_up_st=time.perf_counter()
     delete_a_report_logically()
     sb_up_so=time.perf_counter()
@@ -72,27 +74,27 @@ def delete_a_report_logically():
  global rows_for_logical_delete
  global entries
  for row in entries:
-  if not  row['row_deleted']:
-   continue
-  link = row["link"]
-  row_id = row["id"]
-  if link is not None:
+  if row['Deleted']:
+   link = row["link"]
+   row_id = row["id"]
+   if link is not None:
       sb_up_st=time.perf_counter()
       delete_mega_file(link)
       sb_up_so=time.perf_counter()
       print("Time for cache delete  ",sb_up_so-sb_up_st)
-  rows_for_logical_delete.append(row['id'])
+   rows_for_logical_delete.append(row['id'])
 
- print("After deleted reports",rows_for_logical_delete)
+ print("Reports to be deleted as Delete enabled in UI",rows_for_logical_delete)
 def insert_sector_reports():
  global rows_for_logical_delete
  for row in entries:
-  if  not row['row_deleted'] and row['sector']:
+  if   row['sector']:
    if is_a_good_row(row,"sector"):
     mrow=[{"company":row["company"],"site":"tel","link":row['link'],"report-date":row['publish_date'],"broker":row['broker']}]
     rows_for_logical_delete.append(row["id"])
+    print("Sector Report to be inserted",mrow)
     db.insert_into_sector(mrow)
- print("After Sector reports",rows_for_logical_delete)
+ print("Rows found for deletion after sector insert",rows_for_logical_delete)
 
 
 
@@ -104,10 +106,9 @@ def insert_company_reports():
  good_rows=[]
  ids=[]
  for row in entries:
-   if  row['row_deleted']:
-     continue
+  if not row['sector'] and not row['Deleted']:
    if is_a_good_row(row,"company"):
-    mydict={"Company": row['company'],"link": row['link'],"report-date": row['publish_date'],
+    mydict={"Company": row['company'],"link": row['link'],"report-date": datetime.fromisoformat(row['publish_date']).strftime('%B %d, %Y'),
                     "broker":row['broker'],"recommendation":row['Recommendation'],"target":row['Target'] }
     good_rows.append(mydict)
     ids.append(row["id"])
@@ -116,7 +117,7 @@ def insert_company_reports():
  delete_duplicate_company_reports(good_rows,new_list)
  rows_for_logical_delete.extend([id for id  in ids])
  db.insert_into_database(new_list,"tel")
- print("After Company reports",rows_for_logical_delete)
+ print("Final list of rows to be deleted",rows_for_logical_delete)
 
 
 def find_changed_entries(original_list, modified_list):
@@ -128,7 +129,7 @@ def find_changed_entries(original_list, modified_list):
     "company": "company",
     "broker": "broker",
     "sector": "sector",
-    "delete": "row_deleted",
+    "delete": "Deleted",
 }
   
  original_lookup = {item["id"]: item for item in original_list}
@@ -146,7 +147,7 @@ def find_changed_entries(original_list, modified_list):
         if orig_field=="publish_date":
             mod_value= datetime.strptime(mod_value, "%Y-%m-%d").date()
         if orig_value != mod_value:
-          print("Issue with the value",orig_value,mod_value)
+          print("Issue with the value",orig_value,mod_value,mod_field)
           changed_entries.append(mod_item) 
  return changed_entries               
 
@@ -206,7 +207,7 @@ def save():
         }
         updated_data.append(entry)
     flist=find_changed_entries(entries,updated_data)
-    print ("Changed List ",flist)
+    print ("Changed List , Will be updated ",flist)
     action = request.form.get('action')
     print("Action is ",action)
     if action == 'save_file':
